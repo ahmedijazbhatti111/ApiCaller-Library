@@ -15,14 +15,14 @@ class ApiCallerViewModel(context: Context) : ViewModel() {
 
     fun callApiForResponse(
         method: ApiMethod,
-        url: String,
+        apiPath: String = "",
         vararg parameters: Any?,
         isCache: Boolean = false,
         tokenKey: String? = null,
     ) = MutableStateFlow<ModelState<String>>(ModelState()).also{stateFlow->
         performRemoteApisUseCase(
             method,
-            url,
+            apiPath,
             parameters = parameters,
             isCache,
             tokenKey,
