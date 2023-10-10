@@ -2,6 +2,7 @@ plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
+    id 'maven-publish'
 }
 
 android {
@@ -51,4 +52,18 @@ dependencies {
 
     // Activity/Fragment KTX for viewModels()
     implementation 'androidx.fragment:fragment-ktx:1.5.1'
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+
+                groupId = 'com.github.ahmadbhatti'
+                artifactId = 'generic-api-caller'
+                version = '1.0'
+            }
+        }
+    }
 }

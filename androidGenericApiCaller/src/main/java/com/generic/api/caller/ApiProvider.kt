@@ -5,10 +5,13 @@ import com.google.gson.GsonBuilder
 import okhttp3.Cache
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.ResponseBody
 import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Converter
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
+import java.lang.reflect.Type
 import java.util.concurrent.TimeUnit
 
 object ServiceBuilder {
@@ -43,20 +46,18 @@ object ServiceBuilder {
         }
 */
 
+
         val interceptor = Interceptor { chain ->
-            chain.proceed(chain.request()).also {
-                Header.apply {
-                    headers.clear()
-                    if (isHeader)
-                        it.headers.forEach {
-                            headers[it.first] = it.second
-                        }
-                }
-            }.newBuilder().also { builder ->
+            var request = chain.request()
+            request = request.newBuilder()
+                .header("accept", "text/plain")
+                .header("Content-Type", "application/json")
+                .also { builder ->
                 headerHashMap.forEach {
-                    builder.header(it.key, it.value)
+                    builder.addHeader(it.key, it.value)
                 }
             }.build()
+            chain.proceed(request)
         }
         val logging = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
@@ -78,6 +79,8 @@ object ServiceBuilder {
                 .client(httpClient)
                 .addConverterFactory(ScalarsConverterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create(gson))
+                .addConverterFactory(GsonConverterFactory.create())
+                .addConverterFactory(NullOnEmptyConverterFactory())
                 .build()
                 .create(ApiService::class.java)
         else
@@ -85,7 +88,25 @@ object ServiceBuilder {
                 .client(httpClient)
                 .addConverterFactory(ScalarsConverterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create(gson))
+                .addConverterFactory(GsonConverterFactory.create())
+                .addConverterFactory(NullOnEmptyConverterFactory())
                 .build()
                 .create(ApiService::class.java)
+    }
+}
+
+class NullOnEmptyConverterFactory : Converter.Factory() {
+    override fun responseBodyConverter(
+        type: Type,
+        annotations: Array<Annotation>,
+        retrofit: Retrofit
+    ): Converter<ResponseBody, *> {
+        val delegate: Converter<ResponseBody, *> =
+            retrofit.nextResponseBodyConverter<Any>(this, type, annotations)
+        return Converter { body ->
+            if (body.contentLength() == 0L) null else delegate.convert(
+                body
+            )
+        }
     }
 }

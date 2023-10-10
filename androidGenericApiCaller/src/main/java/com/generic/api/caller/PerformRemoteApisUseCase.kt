@@ -1,5 +1,6 @@
 package com.generic.api.caller
 
+import android.util.Log
 import com.google.gson.JsonObject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -33,10 +34,8 @@ class PerformRemoteApisUseCase constructor(
                 }
                 ApiMethod.POST_BODY -> {
                     val a = parameters.toJson().toHashMap().toJson().toPojo<JsonObject>()
-                    repository.callApiPostWithBody(
-                        url,
-                        parameter = a
-                    )
+                    Log.d("ApiResponse", "invoke: $a")
+                    repository.callApiPostWithBody(url, parameter = a)
                 }
             }
             tokenKey?.let {
